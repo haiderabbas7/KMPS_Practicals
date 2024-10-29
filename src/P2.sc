@@ -10,12 +10,13 @@ import scala.io.Source
 *     Funktionen der Scala/Java Library, außer es ist erlaubt
 *
 *   MUSS BENUTZEN:
-*     Pattern Matching als obersten Ausdruck als EINZIGES Kontrollfluss-Konstrukt
+*     Pattern Matching als obersten Ausdruck
 *
 *   DARF BENUTZEN:
 *     Konstanten, also mit val
 *     List Appending (mylist = mylist :+ elem) und Prepending (mylist = elem :: mylist) Operatoren
 *     Funktion toInt zur Umwandlung von Strings zu Integern
+*     if-clauses aber nur innerhalb des obersten match-Ausdrucks
 * */
 
 case class Track(title: String, length: String, rating:
@@ -23,20 +24,8 @@ Int, features: List[String], writers: List[String])
 case class Album(title: String, date: String, artist:
 String, tracks: List[Track])
 
-/*Aufgabe 2: (Token-Liste erstellen)
-Implementieren Sie zunächst die Funktionalität Ihrer Java-Main-Methode und ihrer
-Methode createTokenList in Scala in folgender Weise:
-a. Lesen Sie die XML Datei mit Source.fromFile("alben.xml").toList in
-eine Liste von Charactern ein.
-b. Implementieren Sie die Funktion createTokenList. Sie soll die gleiche
-Funktionalität wie Ihr Java-Pendant bieten.*/
 
-//soll hier die Character Liste in eine String Liste wie Format aus P1 konvertieren
-//also zb [album, title, Thriller, /title, track, title, Billie Jean, /title,
-//length, 4:54, /length, /track, artist, Michael Jackson, /artist,
-///album]
-
-//hiermit wird der Name ab dem > bis zum < ausgelesen
+//Returned die ersten Zeichen bis zum limit aus xml zurück, limit nicht mit einbegriffen
 def extractUntil(xml: List[Char], limit: Char = '<'): String =
   xml match {
     case Nil => ""
@@ -44,6 +33,7 @@ def extractUntil(xml: List[Char], limit: Char = '<'): String =
     case char :: rest => char + extractUntil(rest, limit)
   }
 
+//Entfernt die ersten Zeichen bis zum limit aus xml und returned die Liste, limit nicht mit einbegriffen
 @tailrec
 def removeUntil(xml: List[Char], limit: Char = '<'): List[Char] =
   xml match {
@@ -52,25 +42,32 @@ def removeUntil(xml: List[Char], limit: Char = '<'): List[Char] =
     case _ :: rest => removeUntil(rest, limit)
   }
 
-//sind hier wirklich als character, also einzelne Zeichen als Elemente und mit Line breaks
+
 def createTokenList(xml: List[Char]): List[String] = {
   xml match {
     case Nil => Nil
+    //Fälle Sonderzeichen, werden überlesen
     case '\n' :: rest => createTokenList(rest)
     case '\r' :: rest => createTokenList(rest)
     case '\t' :: rest => createTokenList(rest)
+    //Hilfs-case, war eine Notlösung, also evtl umformen
     case '>' :: rest => createTokenList(rest)
+    //Fall schließendes Tag: schreib das Tag auf die Liste und mach weiter bei der reduzierten Liste
     case '<' :: '/' :: rest =>
       extractUntil(xml, '>') + ">":: createTokenList(removeUntil(rest, '>'))
+    //Fall öffnendes Tag: schreib das Tag auf die Liste und mach weiter bei der reduzierten Liste
+    //Hier ist wegen dem Pattern Matching wichtig, dass dieser Fall NACH dem schließenden Tag ist
     case '<' :: rest =>
       extractUntil(xml, '>') + ">":: createTokenList(removeUntil(rest, '>'))
+    //Fall Freitext: extrahiere den Freitext und mach weiter bei der reduzierten Liste
     case rest =>
       extractUntil(rest) :: createTokenList(removeUntil(rest))
   }
 }
 
 def main(): Unit = {
-  val filePath = "C:\\Users\\malic\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
+  //AM LAPTOP: malic, AM PC: Haider
+  val filePath = "C:\\Users\\Haider\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
   val xmlContent = Source.fromFile(filePath).toList
   val tokenList = createTokenList(xmlContent)
 
