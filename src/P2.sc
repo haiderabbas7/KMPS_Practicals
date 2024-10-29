@@ -1,3 +1,4 @@
+import scala.annotation.tailrec
 import scala.io.Source
 
 /*
@@ -35,6 +36,22 @@ Funktionalität wie Ihr Java-Pendant bieten.*/
 //length, 4:54, /length, /track, artist, Michael Jackson, /artist,
 ///album]
 
+//hiermit wird der Name ab dem > bis zum < ausgelesen
+def extractUntil(xml: List[Char], limit: Char = '<'): String =
+  xml match {
+    case Nil => ""
+    case char :: _ if char == limit => ""
+    case char :: rest => char + extractUntil(rest, limit)
+  }
+
+@tailrec
+def removeUntil(xml: List[Char], limit: Char = '<'): List[Char] =
+  xml match {
+    case Nil => Nil
+    case char :: rest if char == limit => char :: rest
+    case _ :: rest => removeUntil(rest, limit)
+  }
+
 //sind hier wirklich als character, also einzelne Zeichen als Elemente und mit Line breaks
 def createTokenList(xml: List[Char]): List[String] = {
   xml match {
@@ -42,43 +59,13 @@ def createTokenList(xml: List[Char]): List[String] = {
     case '\n' :: rest => createTokenList(rest)
     case '\r' :: rest => createTokenList(rest)
     case '\t' :: rest => createTokenList(rest)
-    case '<' :: 'a' :: 'l' :: 'b' :: 'u' :: 'm' :: '>' :: rest =>
-      "album" :: createTokenList(rest)
-    case '<' :: '/' :: 'a' :: 'l' :: 'b' :: 'u' :: 'm' :: '>' :: rest =>
-      "/album" :: createTokenList(rest)
-    case '<' :: 't' :: 'i' :: 't' :: 'l' :: 'e' :: '>' :: rest =>
-      "title" :: createTokenList(rest)
-    case '<' :: '/' :: 't' :: 'i' :: 't' :: 'l' :: 'e' :: '>' :: rest =>
-      "/title" :: createTokenList(rest)
-    case '<' :: 'a' :: 'r' :: 't' :: 'i' :: 's' :: 't' :: '>' :: rest =>
-      "artist" :: createTokenList(rest)
-    case '<' :: '/' :: 'a' :: 'r' :: 't' :: 'i' :: 's' :: 't' :: '>' :: rest =>
-      "/artist" :: createTokenList(rest)
-    case '<' :: 'r' :: 'a' :: 't' :: 'i' :: 'n' :: 'g' :: '>' :: rest =>
-      "rating" :: createTokenList(rest)
-    case '<' :: '/' :: 'r' :: 'a' :: 't' :: 'i' :: 'n' :: 'g' :: '>' :: rest =>
-      "/rating" :: createTokenList(rest)
-    case '<' :: 't' :: 'r' :: 'a' :: 'c' :: 'k' :: '>' :: rest =>
-      "track" :: createTokenList(rest)
-    case '<' :: '/' :: 't' :: 'r' :: 'a' :: 'c' :: 'k' :: '>' :: rest =>
-      "/track" :: createTokenList(rest)
-    case '<' :: 'f' :: 'e' :: 'a' :: 't' :: 'u' :: 'r' :: 'e' :: '>' :: rest =>
-      "feature" :: createTokenList(rest)
-    case '<' :: '/' :: 'f' :: 'e' :: 'a' :: 't' :: 'u' :: 'r' :: 'e' :: '>' :: rest =>
-      "/feature" :: createTokenList(rest)
-    case '<' :: 'l' :: 'e' :: 'n' :: 'g' :: 't' :: 'h' :: '>' :: rest =>
-      "length" :: createTokenList(rest)
-    case '<' :: '/' :: 'l' :: 'e' :: 'n' :: 'g' :: 't' :: 'h' :: '>' :: rest =>
-      "/length" :: createTokenList(rest)
-    case '<' :: 'w' :: 'r' :: 'i' :: 't' :: 'i' :: 'n' :: 'g' :: '>' :: rest =>
-      "writing" :: createTokenList(rest)
-    case '<' :: '/' :: 'w' :: 'r' :: 'i' :: 't' :: 'i' :: 'n' :: 'g' :: '>' :: rest =>
-      "/writing" :: createTokenList(rest)
-    case '<' :: 'd' :: 'a' :: 't' :: 'e' :: '>' :: rest =>
-      "date" :: createTokenList(rest)
-    case '<' :: '/' :: 'd' :: 'a' :: 't' :: 'e' :: '>' :: rest =>
-      "/date" :: createTokenList(rest)
-    case _ => Nil  // zum testen, mach am ende weg
+    case '>' :: rest => createTokenList(rest)
+    case '<' :: '/' :: rest =>
+      extractUntil(xml, '>') + ">":: createTokenList(removeUntil(rest, '>'))
+    case '<' :: rest =>
+      extractUntil(xml, '>') + ">":: createTokenList(removeUntil(rest, '>'))
+    case rest =>
+      extractUntil(rest) :: createTokenList(removeUntil(rest))
   }
 }
 
