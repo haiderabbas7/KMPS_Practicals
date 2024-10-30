@@ -84,6 +84,51 @@ boolesche Funktion erfüllen
 b) Wie muss man das erweiterte filter aufrufen, um alle geraden Einträge des Binärbaumes
 in der Ergebnisliste zu speichern?*/
 
+def filterTree(xb: BinaryTree, condition: Int => Boolean): List[N] = {
+  xb match{
+    case E => Nil
+    case N(content, left, right) =>
+      //ich pack die Teilbäume hier nicht mit drauf, damits schöner aussieht
+      if(condition(content)) N(content, E, E)::filterTree(left, condition) ++ filterTree(right, condition)
+      else filterTree(left, condition) ++ filterTree(right, condition)
+  }
+}
+
+filterTree(N(5,N(2,E,E),N(1,E,E)), (x: Int) => x%2==0)
+
+
+/*Aufgabe 28:
+Implementieren Sie eine Scala-Funktion infix, die überprüft, ob eine Liste xs in einer Liste ys
+enthalten ist. Verwenden Sie dabei die Scala-interne Listenstruktur. Sie dürfen dabei die Funktion
+präfix aus Aufgabe 12 verwenden (präfix(xs,ys) bedeutet, dass xs Präfix von ys ist).*/
+
+//Gibt true zurück, wenn xs Präfix von ys ist, also ys mit xs anfängt
+@tailrec
+def prefix(xs: List[Int], ys: List[Int]): Boolean =
+  (xs, ys) match {
+    case (Nil, _) => true
+    case (_, Nil) => false
+    case (x :: xsTail, y :: ysTail) =>
+      if (x == y) prefix(xsTail, ysTail)
+      else false
+  }
+
+//Gibt true zurück, wenn xs in ys enthalten ist
+@tailrec
+def infix(xs: List[Int], ys:List[Int]): Boolean = {
+  (xs, ys) match {
+    case (Nil, _) => true
+    case (_, Nil) => false
+    case (x::xsTail, y :: ysTail) =>
+      if(x == y)
+        if(prefix(x::xsTail, y :: ysTail)) true
+        else infix(x::xsTail, ysTail)
+      else infix(x::xsTail, ysTail)
+  }
+}
+
+infix(2::4::Nil, 1::2::3::4::5::Nil)
+
 
 
 
