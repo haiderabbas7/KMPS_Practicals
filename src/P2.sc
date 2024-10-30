@@ -63,14 +63,21 @@ def createTokenList(xml: List[Char]): List[String] = {
   }
 }
 
-def parseFile(tokens: List[String]): List[Album] = {
-  tokens match {
-    case Nil => Nil
-    case "<album>" :: tail =>
-      val (album, remainingTokens) = parseAlbum(tail)
-      album :: parseFile(remainingTokens)
-    case _ :: tail => parseFile(tail)
+//funktionsweise genau wie parseAlbum
+def parseTrack(tokens: List[String]): (Track, List[String]) = {
+  @tailrec
+  def helper(tokens: List[String], track: Track): (Track, List[String]) = {
+    tokens match {
+      case "</track>" :: rest => (track, rest)
+      case "<title>" :: value :: rest => helper(rest, track.copy(title = value))
+      case "<length>" :: value :: rest => helper(rest, track.copy(length = value))
+      case "<rating>" :: value :: rest => helper(rest, track.copy(rating = value.toInt))
+      case "<feature>" :: value :: rest => helper(rest, track.copy(features = track.features :+ value))
+      case "<writing>" :: value :: rest => helper(rest, track.copy(writers = track.writers :+ value))
+      case _ :: rest => helper(rest, track)
+    }
   }
+  helper(tokens, Track("", "", 0, List(), List()))
 }
 
 //Bekommt Token Liste und gibt das resultierende Album und die reduzierte Token Liste zurück
@@ -89,26 +96,21 @@ def parseAlbum(tokens: List[String]): (Album, List[String]) = {
       case "<track>" :: rest =>
         val (track, remainingTokens) = parseTrack(rest)
         helper(remainingTokens, album.copy(tracks = album.tracks :+ track))
+      case _ :: rest => helper(rest, album)
     }
   }
   //Aufruf der Hilfsmethode mit einem neuen leeren Album objekt
   helper(tokens, Album("", "", "", List()))
 }
 
-//funktionsweise genau wie parseAlbum
-def parseTrack(tokens: List[String]): (Track, List[String]) = {
-  @tailrec
-  def helper(tokens: List[String], track: Track): (Track, List[String]) = {
-    tokens match {
-      case "</track>" :: rest => (track, rest)
-      case "<title>" :: value :: rest => helper(rest, track.copy(title = value))
-      case "<length>" :: value :: rest => helper(rest, track.copy(length = value))
-      case "<rating>" :: value :: rest => helper(rest, track.copy(rating = value.toInt))
-      case "<feature>" :: value :: rest => helper(rest, track.copy(features = track.features :+ value))
-      case "<writing>" :: value :: rest => helper(rest, track.copy(writers = track.writers :+ value))
-    }
+def parseFile(tokens: List[String]): List[Album] = {
+  tokens match {
+    case Nil => Nil
+    case "<album>" :: tail =>
+      val (album, remainingTokens) = parseAlbum(tail)
+      album :: parseFile(remainingTokens)
+    case _ :: tail => parseFile(tail)
   }
-  helper(tokens, Track("", "", 0, List(), List()))
 }
 
 def main(): Unit = {
@@ -116,7 +118,7 @@ def main(): Unit = {
   val xmlContent = Source.fromFile(filePath).toList
   val tokenList = createTokenList(xmlContent)
 
-  //println(tokenList.mkString(", "))
+  println(tokenList.mkString(", "))
 
   val albums = parseFile(tokenList)
   albums.foreach(println)

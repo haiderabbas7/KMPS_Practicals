@@ -63,67 +63,52 @@ def createTokenList(xml: List[Char]): List[String] = {
   }
 }
 
-/*Aufgabe 3 (Parsing der Token)
-Schreiben Sie eine Methode parseFile. Sie soll die gleiche Funktionalität wie Ihr
-Java-Pendant bieten.
-a. Schreiben Sie hierfür zwei Unterfunktionen parseAlbum und parseTrack,
-die das Parsen eines Albums bzw. Tracks übernehmen sollen, sobald aus
-dem aktuellen Token ersichtlich wird, dass ein Album bzw. Track folgt.
-b. Rufen Sie die Funktion parseFile mit der Token-Liste auf und geben Sie
-den Rückgabewert (Liste von Alben) mit println aus.
-Hinweise:
-1. Um eine Kopie eines Objekts einer Case-Class mit einem geänderten Wert
-zu erhalten, dürfen Sie die Methode copy benutzen. Beispiel:
-val track = Track("alter titel", "", 0, List(), List())
-val trackMitNeuemTitel = track.copy(title = "neuer titel")
-2. Ggf. brauchen Sie weitere „case clauses“ in einem PatternmatchingAusdruck, die z.B. den Vergleich auf (Daten-)Typen erlauben oder zusätzlich
-ODER-Verknüpfungen für mehrere Möglichkeiten (innerhalb einer „case
-clause“) zulassen.*/
-
-//bekommt die Token Liste also String liste und soll eine Liste an Alben zurückgeben
-def parseTrack(tokens: List[String]): (Track, List[String]) = {
-  @tailrec
-  def helper(tokens: List[String], track: Track): (Track, List[String]) = {
-    tokens match {
-      case Nil => (track, Nil)
-      case "/track" :: rest => (track, rest)
-      case "title" :: value :: rest => helper(rest, track.copy(title = value))
-      case "length" :: value :: rest => helper(rest, track.copy(length = value))
-      case "rating" :: value :: rest => helper(rest, track.copy(rating = value.toInt))
-      case "feature" :: value :: rest => helper(rest, track.copy(features = track.features :+ value))
-      case "writing" :: value :: rest => helper(rest, track.copy(writers = track.writers :+ value))
-      case _ :: rest => helper(rest, track)
-    }
-  }
-  helper(tokens, Track("", "", 0, List(), List()))
-}
-
-def parseAlbum(tokens: List[String]): (Album, List[String]) = {
-  @tailrec
-  def helper(tokens: List[String], album: Album): (Album, List[String]) = {
-    tokens match {
-      case Nil => (album, Nil)
-      case "/album" :: rest => (album, rest)
-      case "title" :: value :: rest => helper(rest, album.copy(title = value))
-      case "date" :: value :: rest => helper(rest, album.copy(date = value))
-      case "artist" :: value :: rest => helper(rest, album.copy(artist = value))
-      case "track" :: rest =>
-        val (track, remainingTokens) = parseTrack(rest)
-        helper(remainingTokens, album.copy(tracks = album.tracks :+ track))
-      case _ :: rest => helper(rest, album)
-    }
-  }
-  helper(tokens, Album("", "", "", List()))
-}
-
 def parseFile(tokens: List[String]): List[Album] = {
   tokens match {
     case Nil => Nil
-    case "album" :: tail =>
+    case "<album>" :: tail =>
       val (album, remainingTokens) = parseAlbum(tail)
       album :: parseFile(remainingTokens)
     case _ :: tail => parseFile(tail)
   }
+}
+
+//Bekommt Token Liste und gibt das resultierende Album und die reduzierte Token Liste zurück
+def parseAlbum(tokens: List[String]): (Album, List[String]) = {
+  //zusätzliche Hilfsmethode, welche das Track objekt zwischen Aufrufen reicht
+  @tailrec
+  def helper(tokens: List[String], album: Album): (Album, List[String]) = {
+    tokens match {
+      //REKURSIONSANKER: schließendes tag => returne das zusammengesetzte Objekt und restliste
+      case "</album>" :: rest => (album, rest)
+      //FALL Attribute: Attribute auslesen, einfügen und Element kopieren
+      case "<title>" :: value :: rest => helper(rest, album.copy(title = value))
+      case "<date>" :: value :: rest => helper(rest, album.copy(date = value))
+      case "<artist>" :: value :: rest => helper(rest, album.copy(artist = value))
+      //FALL Track: rufe parseTrack auf, Restliste wird durch parseTrack ermittelt und zurückgegeben
+      case "<track>" :: rest =>
+        val (track, remainingTokens) = parseTrack(rest)
+        helper(remainingTokens, album.copy(tracks = album.tracks :+ track))
+    }
+  }
+  //Aufruf der Hilfsmethode mit einem neuen leeren Album objekt
+  helper(tokens, Album("", "", "", List()))
+}
+
+//funktionsweise genau wie parseAlbum
+def parseTrack(tokens: List[String]): (Track, List[String]) = {
+  @tailrec
+  def helper(tokens: List[String], track: Track): (Track, List[String]) = {
+    tokens match {
+      case "</track>" :: rest => (track, rest)
+      case "<title>" :: value :: rest => helper(rest, track.copy(title = value))
+      case "<length>" :: value :: rest => helper(rest, track.copy(length = value))
+      case "<rating>" :: value :: rest => helper(rest, track.copy(rating = value.toInt))
+      case "<feature>" :: value :: rest => helper(rest, track.copy(features = track.features :+ value))
+      case "<writing>" :: value :: rest => helper(rest, track.copy(writers = track.writers :+ value))
+    }
+  }
+  helper(tokens, Track("", "", 0, List(), List()))
 }
 
 def main(): Unit = {
@@ -131,12 +116,9 @@ def main(): Unit = {
   val xmlContent = Source.fromFile(filePath).toList
   val tokenList = createTokenList(xmlContent)
 
-  // Prüfen, ob xmlContent richtig befüllt wurde
   //println(tokenList.mkString(", "))
 
-  // Aufruf der parseFile-Funktion und Ausgabe der Alben
   val albums = parseFile(tokenList)
-  println("Parsed Albums: " + albums.mkString(", "))
   albums.foreach(println)
 }
 
