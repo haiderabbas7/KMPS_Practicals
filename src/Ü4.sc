@@ -24,7 +24,7 @@ def addMap(xs: List[Int], f: Int => Int): Int = {
   add(xs.map(f))
 }
 
-//addMap(2::2::2::Nil, (x: Int) => x * x)
+//addMap(2::2::2::Nil, (x: Int) => x * x
 
 
 
