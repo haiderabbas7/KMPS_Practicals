@@ -63,32 +63,33 @@ def createTokenList(xml: List[Char]): List[String] = {
   }
 }
 
-//funktionsweise genau wie parseAlbum
+//Bekommt Token Liste und gibt das resultierende Album und die reduzierte Token Liste zurück
 def parseTrack(tokens: List[String]): (Track, List[String]) = {
+  //zusätzliche Hilfsmethode, welche das Track objekt zwischen Aufrufen reicht
   @tailrec
   def helper(tokens: List[String], track: Track): (Track, List[String]) = {
     tokens match {
+      //REKURSIONSANKER: schließendes tag => returne das zusammengesetzte Objekt und restliste
       case "</track>" :: rest => (track, rest)
+      //FALL Attribute: Attribute auslesen, einfügen und Element kopieren
       case "<title>" :: value :: rest => helper(rest, track.copy(title = value))
       case "<length>" :: value :: rest => helper(rest, track.copy(length = value))
       case "<rating>" :: value :: rest => helper(rest, track.copy(rating = value.toInt))
       case "<feature>" :: value :: rest => helper(rest, track.copy(features = track.features :+ value))
       case "<writing>" :: value :: rest => helper(rest, track.copy(writers = track.writers :+ value))
+      //FALL Andere Tags gelesen, also schließende: werden übersprungen
       case _ :: rest => helper(rest, track)
     }
   }
   helper(tokens, Track("", "", 0, List(), List()))
 }
 
-//Bekommt Token Liste und gibt das resultierende Album und die reduzierte Token Liste zurück
+//funktionsweise genau wie parseTrack
 def parseAlbum(tokens: List[String]): (Album, List[String]) = {
-  //zusätzliche Hilfsmethode, welche das Track objekt zwischen Aufrufen reicht
   @tailrec
   def helper(tokens: List[String], album: Album): (Album, List[String]) = {
     tokens match {
-      //REKURSIONSANKER: schließendes tag => returne das zusammengesetzte Objekt und restliste
       case "</album>" :: rest => (album, rest)
-      //FALL Attribute: Attribute auslesen, einfügen und Element kopieren
       case "<title>" :: value :: rest => helper(rest, album.copy(title = value))
       case "<date>" :: value :: rest => helper(rest, album.copy(date = value))
       case "<artist>" :: value :: rest => helper(rest, album.copy(artist = value))
