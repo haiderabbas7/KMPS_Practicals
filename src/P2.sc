@@ -27,8 +27,10 @@ case class Album(title: String, date: String, artist:  String, tracks: List[Trac
 def extractUntil(xml: List[Char], limit: Char = '<'): String =
   xml match {
     case Nil => ""
-    case char :: _ if char == limit => ""
-    case char :: rest => char + extractUntil(rest, limit)
+    case char :: rest => char match {
+      case `limit` => ""
+      case _ => char + extractUntil(rest, limit)
+    }
   }
 
 //Entfernt die ersten Zeichen bis zum limit aus xml und returned die Liste, limit nicht mit einbegriffen
@@ -36,8 +38,10 @@ def extractUntil(xml: List[Char], limit: Char = '<'): String =
 def removeUntil(xml: List[Char], limit: Char = '<'): List[Char] =
   xml match {
     case Nil => Nil
-    case char :: rest if char == limit => char :: rest
-    case _ :: rest => removeUntil(rest, limit)
+    case char :: rest => char match {
+      case `limit` => char :: rest
+      case _ => removeUntil(rest, limit)
+    }
   }
 
 
@@ -115,7 +119,7 @@ def parseFile(tokens: List[String]): List[Album] = {
 }
 
 def main(): Unit = {
-  val filePath = "C:\\Users\\Haider\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
+  val filePath = "C:\\Users\\malic\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
   val xmlContent = Source.fromFile(filePath).toList
   val tokenList = createTokenList(xmlContent)
 
