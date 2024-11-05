@@ -159,6 +159,26 @@ def partition[A](input_list: List[A], condition: A => Boolean): List[List[A]] = 
 }
 
 
+/*
+PARTITION VON MARTIN, BENUTZ VIELLEICHT DAS HIER
+def partition[T](inputList: List[T], condition: T => Boolean): List[List[T]] = {
+  def innerPartition(currentList: List[T], matching: List[T], acc: List[List[T]]): List[List[T]] = currentList match {
+    case Nil =>
+      // Add the last `matching` list to the accumulator (even if empty), and return the final result
+      acc :+ matching
+    case head::tail =>
+      if (condition(head)) {
+        // If the condition is true (uppercase character), add `matching` and an empty list to `acc`
+        innerPartition(tail, List(), acc :+ matching)
+      } else {
+        innerPartition(tail, matching :+ head, acc)
+      }
+  }
+
+  innerPartition(inputList, List(), List())
+}*/
+
+
 
 
 def main(): Unit = {
