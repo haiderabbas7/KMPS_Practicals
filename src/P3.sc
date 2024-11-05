@@ -153,10 +153,12 @@ def partition[A](input_list: List[A], condition: A => Boolean): List[List[A]] = 
   input_list match{
     case Nil => Nil
     case head::tail =>
-      if(condition(head)) List(head)::partition(tail, condition)
+      if(condition(head)) Nil ++ partition(tail, condition)
       else List(head)::partition(tail, condition)
   }
 }
+
+
 
 
 def main(): Unit = {
@@ -167,7 +169,7 @@ def main(): Unit = {
   val michaelJackson = albums(1)
 
   println("\nAufgabe 1a:")
-  val arr = map(List("a", "b", "c", "d"), (s: String) => s.toUpperCase);
+  val arr = map(List("a", "b", "c", "d"), (s: String) => s.toUpperCase)
   arr.foreach(println)
 
   println("\nAufgabe 1b:")
@@ -200,6 +202,9 @@ def main(): Unit = {
   )
   rodTempertonTitles.foreach(println)
 
+  val res = partition(List(1,2,0,0,3,4,0,5), (x: Int) => x == 0)
+  //Wenn Condition true, dann split. Ergebnis hiervon muss sein ([1,2], [], [3,4], [5])
+  println(res)
 }
 
 main()
