@@ -48,4 +48,8 @@ def main(): Unit = {
   println(tokenList.mkString(", "))
 }
 
-main()
+def range(a:Int,b:Int) : List[Int] =
+  if (a>b) Nil else a::range(a+1,b)
+
+range(1,5)
+//main()

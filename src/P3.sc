@@ -119,9 +119,18 @@ def parseFile(tokens: List[String]): List[Album] = {
 
 
 //AB HIER BEGINNT P3
+//Returned true, wenn der String s nur aus Leerzeichen besteht
+def isBlank(s: String): Boolean = s.trim.isEmpty
 
+@tailrec
+def foldl(f:(Int,Int) => Int, start: Int, xs: List[Int]) : Int =
+  xs match {
+    case Nil => start //bei leerer Liste Rückgabe von start
+    case h :: ts => foldl(f, f(start, h), ts)
+  }
 
-
+def range(a:Int,b:Int) : List[Int] =
+  if (a>b) Nil else a::range(a+1,b)
 
 def map[A](input_list: List[A], func: A => A): List[A] = {
   input_list match{
@@ -165,27 +174,6 @@ def partition[A](inputList: List[A], condition: A => Boolean): List[List[A]] = {
   innerPartition(inputList, List(), List())
 }
 
-//Returned true, wenn der String s nur aus Leerzeichen besteht
-def isBlank(s: String): Boolean = s.trim.isEmpty
-
-
-/*def createTokenList(xml: List[Char]): List[String] = {
-  xml match {
-    case Nil => Nil
-    //Fälle Sonderzeichen, werden überlesen, sowie den Hilfs-case >
-    case ('\n' | '\r' | '\t' | '>') :: rest => createTokenList(rest)
-    //Fall schließendes Tag: schreib das Tag auf die Liste und mach weiter bei der reduzierten Liste
-    case '<' :: '/' :: rest =>
-      '/' + extractUntil(rest, '>'):: createTokenList(removeUntil(rest, '>'))
-    //Fall öffnendes Tag: schreib das Tag auf die Liste und mach weiter bei der reduzierten Liste
-    //Hier ist wegen dem Pattern Matching wichtig, dass dieser Fall NACH dem schließenden Tag ist
-    case '<' :: rest =>
-      extractUntil(rest, '>'):: createTokenList(removeUntil(rest, '>'))
-    //Fall Freitext: extrahiere den Freitext und mach weiter bei der reduzierten Liste
-    case rest =>
-      extractUntil(rest) :: createTokenList(removeUntil(rest))
-  }
-}*/
 def createTokenListHigherOrder(xml: List[Char]): List[String] = {
   filter(
     poly_map(
@@ -201,6 +189,28 @@ def createTokenListHigherOrder(xml: List[Char]): List[String] = {
     (d: String) => !isBlank(d)
   )
 }
+
+/* f ist die Funktion, die auf jedem Element zwischen a und b angewandt wird
+* op ist die Verknüpfungsoperation (bei sum ist es Addition, bei prod ist es Multiplikation)
+* identity ist dazu da, um das Standardverhalten zu beeinflussen und wirkt sich für verschiedene Funktionen anders aus
+* zb für Addition braucht man 0, bei Multiplikation eine 1*/
+def myFold(a: Int, b: Int, f: Int => Int, op: (Int, Int) => Int, identity: Int): Int = {
+  if (a > b) identity
+  else op(f(a), myFold(a + 1, b, f, op, identity))
+}
+
+def foldHigherOrder(a: Int, b: Int, f: Int => Int, op: (Int, Int) => Int, identity: Int): Int = {
+  /*
+  1. Wir machen range von a nach b um die Int Liste der Werte zu erhalten
+    [a, a+1, a+2, ...., b]
+  2. Wir machen map auf der Int Liste mit der Funktion f, womit wir f auf jedem Element anwenden
+    [f(a), f(a+1), f(a+2), ...., f(b)]
+  3. wir folden alle Elemente der Int Liste mit der Funktion op
+    op(f(a), f(a+1), ...., f(b))
+  */
+  foldl(op, identity, map(range(a, b), f))
+}
+
 
 def main(): Unit = {
   val filePath = "C:\\Users\\haider\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
@@ -263,6 +273,31 @@ def main(): Unit = {
   println("\nAufgabe 3c:")
   val tokenListHigherOrder = createTokenListHigherOrder(xmlContent)
   println(tokenListHigherOrder)
+
+
+  println("\nAufgabe 4a:")
+  val sum = myFold(1, 5, a => a, (b, c) => b + c, 0) //1 + 2 + 3 + 4 + 5 = 15
+  println(sum)
+
+
+  println("\nAufgabe 4b:")
+  /*Meine Implementierung verwendet Right-Folding, da der Ausdruck op(f(a), fold(a + 1, b, f, op, identity))
+  * den Funktionswert von f(a) zuerst auswertet und dann mit dem rekursiven Aufruf von fold weitermacht
+  * Bei left-folding könnte es bei zb. nicht-kommutativen Operationen wie Subtraktionen und Divisionen zu
+  * Logikfehlern kommen*/
+
+
+  println("\nAufgabe 4c:")
+  val sumEmpty = myFold(1, 1, a => a, (b, c) => b + c, 0) //1 + 2 + 3 + 4 + 5 = 15
+  println(sumEmpty)
+  /*Bei einem "leeren" Wertebereich von [a;a] wird die Operation f auf dem Element a angewandt und dies zurückgegeben
+  * Hier wäre es jedoch sinnvoller, wenn die Funktion dies erkennt und ausgibt
+  * Bei einem echt leeren Wertebereich [a;b] mit a > b wird der Parameter identity zurückgegeben*/
+
+
+  println("\nAufgabe 4d:")
+  val sumHigherOrder = foldHigherOrder(1, 5, a => a, (b, c) => b + c, 0)
+  println(sumHigherOrder)
 }
 
 main()
