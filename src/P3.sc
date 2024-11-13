@@ -119,19 +119,7 @@ def parseFile(tokens: List[String]): List[Album] = {
 
 
 //AB HIER BEGINNT P3
-//Returned true, wenn der String s nur aus Leerzeichen besteht
-def isBlank(s: String): Boolean = s.trim.isEmpty
-
-@tailrec
-def foldl(f:(Int,Int) => Int, start: Int, xs: List[Int]) : Int =
-  xs match {
-    case Nil => start //bei leerer Liste Rückgabe von start
-    case h :: ts => foldl(f, f(start, h), ts)
-  }
-
-def range(a:Int,b:Int) : List[Int] =
-  if (a>b) Nil else a::range(a+1,b)
-
+//Wendet Funktion func auf alle Elemente der Input-List an
 def map[A](input_list: List[A], func: A => A): List[A] = {
   input_list match{
     case Nil => Nil
@@ -139,6 +127,7 @@ def map[A](input_list: List[A], func: A => A): List[A] = {
   }
 }
 
+//Wendet Funktion func auf alle Elemente der Input-List an. Typen A und B können auch die gleichen sein
 def poly_map[A, B](input_list: List[A], func: A => B): List[B] = {
   input_list match {
     case Nil => Nil
@@ -146,6 +135,7 @@ def poly_map[A, B](input_list: List[A], func: A => B): List[B] = {
   }
 }
 
+//Prüft alle Elemente aus input_list auf die condition und returned die Liste der Elemente, für die die condition zutrifft
 def filter[A](input_list: List[A], condition: A => Boolean): List[A] = {
   input_list match{
     case Nil => Nil
@@ -162,17 +152,17 @@ def partition[A](inputList: List[A], condition: A => Boolean): List[List[A]] = {
       //REKURSIONSANKER: appende current auf accumulated
       case Nil => accumulated :+ current
       case head :: tail =>
-        if (condition(head)) {
-          //FALL condition ist true, also pack die current liste auf accumulated
-          innerPartition(tail, List(), accumulated :+ current)
-        } else {
-          //FALL condition ist false, also pack das head element auf die current liste
-          innerPartition(tail, current :+ head, accumulated)
-        }
+        //FALL condition ist true, also TEILE: pack die current liste auf accumulated
+        if (condition(head)) innerPartition(tail, List(), accumulated :+ current)
+        //FALL condition ist false, also CONTINUE: pack das head element auf die current liste
+        else innerPartition(tail, current :+ head, accumulated)
     }
   }
   innerPartition(inputList, List(), List())
 }
+
+//Returned true, wenn der String s nur aus Leerzeichen besteht. Returned auch true für leeren String ""
+def isBlank(s: String): Boolean = s.trim.isEmpty
 
 def createTokenListHigherOrder(xml: List[Char]): List[String] = {
   filter(
@@ -198,6 +188,16 @@ def myFold(a: Int, b: Int, f: Int => Int, op: (Int, Int) => Int, identity: Int):
   if (a > b) identity
   else op(f(a), myFold(a + 1, b, f, op, identity))
 }
+
+@tailrec
+def foldl(f:(Int,Int) => Int, start: Int, xs: List[Int]) : Int =
+  xs match {
+    case Nil => start //bei leerer Liste Rückgabe von start
+    case h :: ts => foldl(f, f(start, h), ts)
+  }
+
+def range(a:Int,b:Int) : List[Int] =
+  if (a>b) Nil else a::range(a+1,b)
 
 def foldHigherOrder(a: Int, b: Int, f: Int => Int, op: (Int, Int) => Int, identity: Int): Int = {
   /*
@@ -237,8 +237,7 @@ def main(): Unit = {
 
 
   println("\nAufgabe 1e:")
-  val albumsOnlyTracks = poly_map(albums, (album: Album) =>
-    poly_map(album.tracks, (track: Track) => track.length))
+  val albumsOnlyTracks = poly_map(albums, (album: Album) => poly_map(album.tracks, (track: Track) => track.length))
   albumsOnlyTracks.foreach(println)
 
 
@@ -301,23 +300,4 @@ def main(): Unit = {
 }
 
 main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
