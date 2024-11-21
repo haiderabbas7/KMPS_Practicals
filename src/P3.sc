@@ -208,12 +208,16 @@ def foldHigherOrder(a: Int, b: Int, f: Int => Int, op: (Int, Int) => Int, identi
   3. wir folden alle Elemente der Int Liste mit der Funktion op
     op(f(a), f(a+1), ...., f(b))
   */
-  foldl(op, identity, map(range(a, b), f))
+  foldl(op, identity,
+    map(
+      range(a, b),
+    f)
+  )
 }
 
 
 def main(): Unit = {
-  val filePath = "C:\\Users\\haider\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
+  val filePath = "C:\\Users\\malic\\IdeaProjects\\KMPS_P2\\src\\alben.xml"
   val xmlContent = Source.fromFile(filePath).toList
   val tokenList = createTokenList(xmlContent)
   val albums = parseFile(tokenList)
@@ -280,10 +284,9 @@ def main(): Unit = {
 
 
   println("\nAufgabe 4b:")
-  /*Meine Implementierung verwendet Right-Folding, da der Ausdruck op(f(a), fold(a + 1, b, f, op, identity))
-  * den Funktionswert von f(a) zuerst auswertet und dann mit dem rekursiven Aufruf von fold weitermacht
-  * Bei left-folding könnte es bei zb. nicht-kommutativen Operationen wie Subtraktionen und Divisionen zu
-  * Logikfehlern kommen*/
+  println("Meine Implementierung verwendet Right-Folding, da der Ausdruck op(f(a), fold(a + 1, b, f, op, identity)) \n " +
+    "den Funktionswert von f(a) zuerst auswertet und dann mit dem rekursiven Aufruf von fold weitermacht. \n" +
+    "Bei left-folding könnte es bei zb. nicht-kommutativen Operationen wie Subtraktionen und Divisionen zu Logikfehlern kommen")
 
 
   println("\nAufgabe 4c:")

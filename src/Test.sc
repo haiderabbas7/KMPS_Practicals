@@ -1,6 +1,26 @@
 import scala.annotation.tailrec
 import scala.io.Source
 
+def ackermann(a: Int, b: Int): Int = {
+  (a,b) match{
+    case (_, 0) => 1
+    case (0, 1) => 2
+    case (0, y) => y + 2
+    case (x, y) => ackermann(x - 1, ackermann(x, y - 1))
+  }
+}
+
+//IST GLEICH WIE DIE OBERE MIT PATTERN MATCHING
+def ackermannMitIfs(a: Int, b: Int): Int = {
+  if(b == 0 && a >= 0) 1
+  else if(a == 0 && b == 1) 2
+  else if(a == 0 && b >= 2) b + 2
+  else ackermannMitIfs(a-1, ackermannMitIfs(a, b-1))
+}
+
+println(ackermann(3,1))
+
+
 //Returned die ersten Zeichen bis zum limit aus xml zurück, limit nicht mit einbegriffen
 def extractUntil(xml: List[Char], limit: Char = '<'): String =
   xml match {
